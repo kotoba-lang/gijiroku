@@ -52,7 +52,12 @@ MeetingRecordActor (root, 1 run = 1 op)
 ## 4. 注入される依存（すべて swap）
 
 - **Platform**（`gijiroku.platform/MeetingPlatform`）: `mock-platform`（既定）/
-  `gijiroku.zoom` ‖ `gijiroku.google-meet` ‖ `gijiroku.teams`（実クライアント）。
+  `gijiroku.zoom` ‖ `gijiroku.google-meet` ‖ `gijiroku.teams`（公式 API、OAuth
+  app 前提）/ `gijiroku.bot-join`（`:bot-join` alias、OAuth app 不要 — 会議
+  URL だけでヘッドレスブラウザが参加、ADR-0002）。
+- **Transcriber**（`gijiroku.transcriber/Transcriber`、bot-join 専用）:
+  `mock-transcriber`（既定）/ `gijiroku.whisper/whisper-transcriber`
+  （OpenAI 互換 STT、話者分離無し）。
 - **Store**（`gijiroku.store/Store`）: `MemStore`（既定）/ `DatomicStore`
   （`langchain.db` = Datomic-API 互換 EAV。`:db-api` で実 Datomic Local /
   kotoba-server pod に差し替え）。
@@ -63,16 +68,22 @@ MeetingRecordActor (root, 1 run = 1 op)
   実装は各消費アプリ（cloud-itonami/cloud-manimani）側のメール/Slack/カレンダー
   連携に委ねる。
 
-## 5. 段階導入と bot 参加方式の位置づけ
+## 5. 段階導入と bot-join Platform（ADR-0002）
 
 Phase 0→3 は draft/distribute のみをゲートする（ingest は常時 ON）。
 `:minutes/distribute` はどの phase でも `:auto` に入らない — kekkai の
 `:node/admit`、newscaster の `:episode/publish` と同じ charter。
 
-録音取得を「公式 API pull」から「bot 参加によるライブキャプチャ」へ拡張したい
-場合は、`MeetingPlatform` protocol の新規実装（`kotoba-lang/playwright` や
-`browser-agent-clj` を使った headless join）を追加するだけで済む設計にしてある
-（ADR-2607031100 の bot 参加検討を参照）。現時点では未実装・charter 外。
+録音取得は「公式 API pull」に加えて「bot 参加によるライブキャプチャ」
+（`gijiroku.bot-join`、`:bot-join` alias、`kotoba-lang/playwright` 使用）を
+実装済み — `MeetingPlatform` を protocol にした設計判断がそのまま効いて、
+`operation.cljc`/`governor.cljc` は無変更で追加できた（ADR-0002）。
+
+OAuth app 登録・admin consent が一切不要な代わりに、Xvfb+PulseAudio+ffmpeg の
+ホスト構成が要る・join-flow セレクタが各社 UI 変更で壊れうる・話者分離が無い、
+という明確なトレードオフを負う。**どちらの Platform 実装でも PrivacyGovernor の
+不変条件は同一**（bot-join は `:recording/fetch`/`:transcript/ingest` の別ソース
+というだけ）。
 
 ## 6. デモ（`clojure -M:dev:run`）
 
@@ -80,10 +91,13 @@ Phase 0→3 は draft/distribute のみをゲートする（ingest は常時 ON�
 自動下書き → 同意無しの HARD HOLD → 機微引用の HARD HOLD → 常に人間承認の
 配布 → テナント越境配布の HARD HOLD → phase 0 の抑制）。最後に監査台帳を表示。
 
-## 7. テスト（`clojure -M:dev:test`）
+## 7. テスト（`clojure -M:dev:test:bot-join`）
 
 `test/gijiroku/governor_contract_test.clj` がプライバシー契約を実行可能にする
 （consent-required／redaction／tenant-isolation／no-actuation の各 HARD 不変条件、
 distribute は常に人間承認、phase 0 の抑制）。`store_contract_test.clj` が
 MemStore ≡ DatomicStore を、`platform_test.clj` が mock 契約 + VTT パーサ +
-webhook HMAC 検証を、`cacao_test.clj` が CACAO 自己発行をオフライン検証する。
+webhook HMAC 検証を、`bot_join_test.clj` が join-URL 構築（OAuth 不要である
+ことそのもの）+ セレクタ網羅性 + register-meeting! 契約を、`whisper_test.clj`
+が verbose_json 正規化 + multipart body 形状を、`cacao_test.clj` が CACAO
+自己発行をオフライン検証する（30 tests / 92 assertions、lint clean）。

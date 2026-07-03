@@ -65,20 +65,41 @@ meeting facts (meeting/consent/recording/transcript)
 | `src/gijiroku/operation.cljc` | **MeetingRecordActor** — langgraph-clj StateGraph; ingest vs assess flows |
 | `src/gijiroku/cacao.clj` | agent-side **CACAO self-mint** (JVM Ed25519 + did:key + CBOR) |
 | `src/gijiroku/kotoba.clj` | wire `DatomicStore` to a kotoba-server pod (kotobase.net XRPC) |
+| `src/gijiroku/bot_join.clj` | **bot-join `MeetingPlatform`** — headless-browser join, no OAuth app needed (`:bot-join` alias) |
+| `src/gijiroku/transcriber.cljc` | `Transcriber` port + `mock-transcriber` (bot-join has no native transcript) |
+| `src/gijiroku/whisper.clj` | Whisper-compatible STT client for bot-join audio |
 | `src/gijiroku/sim.cljc` | demo driver |
-| `test/gijiroku/*_test.clj` | privacy contract · store parity (Mem≡Datomic) · platform (mock + VTT/HMAC) · CACAO |
+| `test/gijiroku/*_test.clj` | privacy contract · store parity (Mem≡Datomic) · platform (mock + VTT/HMAC) · bot-join (join-URL/selectors) · Whisper (multipart) · CACAO |
 
-## Recording acquisition: official APIs, not a meeting bot
+## Recording acquisition: two Platform implementations
 
 Two approaches were weighed (ADR-2607031100): pulling recordings/transcripts
 from each platform's **official cloud API** after the host enables native
 recording, vs. a **headless-browser bot** that joins as a participant and
-records/transcribes itself. This actor takes the official-API path — more
-ToS-compliant, far less implementation surface, and it does not depend on any
-one platform's UI staying stable. `MeetingPlatform` is a protocol precisely so
-a bot-join implementation (e.g. built on `kotoba-lang/playwright` or
-`browser-agent-clj`) could be added later without touching the actor core —
-that is charter-adjacent, not charter, and is not implemented here.
+records/transcribes itself. `MeetingPlatform` is a protocol precisely so both
+can coexist without touching `gijiroku.operation`/`gijiroku.governor`:
+
+- **`gijiroku.zoom` / `gijiroku.google-meet` / `gijiroku.teams`** (default) —
+  official cloud APIs. More ToS-compliant, less implementation surface,
+  platform-native transcripts (with speaker attribution). Requires an OAuth
+  app registered per platform (Zoom S2S OAuth app, Google Workspace
+  service account, Entra ID app) with admin consent, and the host must have
+  native recording/transcription enabled.
+- **`gijiroku.bot-join`** (`:bot-join` alias, ADR-0002) — a headless browser
+  joins with just the meeting URL, **no OAuth app / admin consent needed**.
+  Trade-offs: needs an Xvfb+PulseAudio+ffmpeg host rig, join-flow selectors
+  are UI heuristics that can break, no speaker diarization (STT-only
+  transcript), and some platforms restrict unattended bots under their ToS
+  — evaluate per org before enabling.
+
+```clojure
+;; bot-join: add the alias, then
+(require '[gijiroku.bot-join :as bj] '[gijiroku.platform :as p])
+(def pf (bj/bot-join-platform {:tenant "cloud-manimani"}))  ; default mock-transcriber
+(bj/register-meeting! pf {:external-id "abc-defg-hij" :platform :google-meet
+                          :tenant "cloud-manimani" :participants []})
+(p/fetch-recording pf "abc-defg-hij")   ; BLOCKING — joins live, captures until the call ends
+```
 
 ## PrivacyGovernor — independent censor
 
@@ -155,14 +176,20 @@ hold/escalate** する（LLM の幻覚や取りこぼしが「配布」に直結
 
 ## Status
 
-設計実装まで完了。runnable（`clojure -M:dev:run`）+ 契約テスト（privacy contract
-· store parity · platform mock/VTT/HMAC · CACAO offline）、lint clean 想定。
+設計実装まで完了。runnable（`clojure -M:dev:run`）+ 契約テスト（`clojure
+-M:dev:test:bot-join` — privacy contract · store parity · platform
+mock/VTT/HMAC · bot-join join-URL/selectors · Whisper multipart · CACAO
+offline、**30 tests / 92 assertions**）、lint clean（`clojure -M:bot-join:lint`）。
+
 Zoom/Google Meet/Teams の実クライアントは正しい API 形状で実装済みだが、各社の
 OAuth app 登録・admin consent が前提のため **live 結合は未検証**（kekkai の
 kotobase.net 522 と同種の「オフライン契約は保証、live は creds 到着後」の
-既知状況）。
+既知状況）。bot-join（ADR-0002）は join-URL 構築・host-caps 契約はオフライン
+検証済みだが、実会議での join + 音声キャプチャは Xvfb/PulseAudio/ffmpeg ホスト
+が本環境に無いため同様に未検証。
 
-残り: 各社 OAuth app 登録後の live 結合、実 LLM（一般 API key）、
+残り: 各社 OAuth app 登録後の live 結合、bot-join の Xvfb/PulseAudio/ffmpeg
+ホスト構築 + 実会議での live 結合、実 LLM/実 STT（一般 API key）、
 kotobase.net origin 復帰時の live 結合、cloud-itonami/cloud-manimani 側の
 実際の consumer 配線（deps.edn 追加 + UI）、Distributor port の実装
 （メール/Slack 等、承認後のみ呼ばれる）。

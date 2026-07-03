@@ -10,6 +10,10 @@
  {;; offline workspace dev — pin transitive langchain-clj to local checkout
   :dev {:override-deps
         {io.github.com-junkawasaki/langchain-clj {:local/root "../../com-junkawasaki/langchain-clj"}}}
+  ;; gijiroku.bot-join (headless-browser meeting join, no OAuth app needed) —
+  ;; NOT a core dep, so the OAuth-API path (gijiroku.zoom/google-meet/teams)
+  ;; stays lightweight for consumers that don't need bot-join.
+  :bot-join {:extra-deps {io.github.kotoba-lang/playwright {:local/root "../playwright"}}}
   ;; clojure -M:dev:run  → drive a scribe actor through mock meetings
   :run {:main-opts ["-m" "gijiroku.sim"]}
   :test {:extra-paths ["test"]

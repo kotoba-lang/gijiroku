@@ -8,6 +8,10 @@
 - 正本: superproject `90-docs/adr/2607031100-kotoba-lang-gijiroku-meeting-actor.md`
   （org 配置・org taxonomy 判断・cloud-itonami/cloud-manimani 消費経路を含む
   canonical な意思決定）。本ファイルはこの repo 内の実装詳細への短いポインタ。
+- 追記（2026-07-03）: 下記1.の「bot 参加方式は charter 外」は ADR-0002 で
+  覆した — `gijiroku.bot-join` として実装済み（`MeetingPlatform` を protocol
+  にした設計のおかげで `operation.cljc`/`governor.cljc` は無変更）。詳細は
+  ADR-0002 を参照。
 
 ## Context
 
