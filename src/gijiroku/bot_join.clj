@@ -34,10 +34,18 @@
   kekkai's kotobase.net wiring. What IS verified offline: join-URL
   construction per platform and the host-caps injection contract
   (test/gijiroku/bot_join_test.clj)."
-  (:require [playwright-clj.core :as pw]
-            [gijiroku.model :as m]
+  (:require [gijiroku.model :as m]
             [gijiroku.platform :as p]
             [gijiroku.transcriber :as t]))
+
+(defn- pw
+  "Lazily resolve+call playwright-clj.core/f-name — keeps playwright-clj off
+  this namespace's load-time classpath requirement (see docstring: it's the
+  `:bot-join` alias's opt-in dep, not a core gijiroku dep), while still
+  failing with a clear \"namespace not found\" if join!/meeting-ended? are
+  actually called without the alias active."
+  [f-name & args]
+  (apply (requiring-resolve (symbol "playwright-clj.core" (name f-name))) args))
 
 ;; ───────────────────────── join URLs (no app registration) ─────────────────────────
 
@@ -103,7 +111,7 @@
 (defn- meeting-ended?
   "True once the in-meeting selector goes hidden (call ended / bot removed)."
   [page sel poll-ms]
-  (try (pw/wait-for page (:in-meeting sel) :hidden {:timeout poll-ms}) true
+  (try (pw :wait-for page (:in-meeting sel) :hidden {:timeout poll-ms}) true
        (catch Exception _ false)))
 
 (defn join!
@@ -127,14 +135,14 @@
   (let [sel (get selectors (:platform meeting))
         url (join-url meeting)
         session-id (str (:external-id meeting) "-" (System/nanoTime))
-        b (pw/launch {:headless true :args browser-args})
-        page (pw/new-page b)
+        b (pw :launch {:headless true :args browser-args})
+        page (pw :new-page b)
         start-ms (System/currentTimeMillis)]
     (try
-      (pw/goto page url)
-      (pw/fill page (:name-input sel) display-name)
-      (pw/click page (:join-btn sel))
-      (pw/wait-for page (:in-meeting sel) :visible {:timeout 60000})
+      (pw :goto page url)
+      (pw :fill page (:name-input sel) display-name)
+      (pw :click page (:join-btn sel))
+      (pw :wait-for page (:in-meeting sel) :visible {:timeout 60000})
       (let [audio (audio-start-fn session-id)
             deadline (+ start-ms (* 1000 max-duration-s))]
         (loop []
@@ -143,7 +151,7 @@
             (recur)))
         (audio-stop-fn audio)
         {:audio-path (:path audio) :duration-s (quot (- (System/currentTimeMillis) start-ms) 1000)})
-      (finally (pw/close b)))))
+      (finally (pw :close b)))))
 
 ;; ───────────────────────── MeetingPlatform ─────────────────────────
 
