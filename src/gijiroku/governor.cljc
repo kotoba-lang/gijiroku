@@ -78,7 +78,11 @@
                 (into [] (concat (consent-violations mtg cons)
                                  (tenant-violations mtg (:recipients request))
                                  (actuation-violations proposal)))
-                [])
+                ;; an unrecognized :op is itself a hard violation (fail-closed:
+                ;; a not-yet-wired op must never silently pass as clean) --
+                ;; same invariant denrei/koyomi/tayori/kekkai/shoko/teian/
+                ;; ichiran's governors already enforce for their own ops.
+                [{:rule :unrecognized-op :detail (str "未対応op: " (:op request))}])
         conf    (:confidence proposal 0.0)
         low?    (< conf confidence-floor)
         stakes? (= :minutes/distribute (:op request))
