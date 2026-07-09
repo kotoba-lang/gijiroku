@@ -4,12 +4,18 @@
  ;; robotaxi-actor / vehicle-design-actor / itonami / kekkai ride on; a meeting-
  ;; recording actor is just another sealed-intelligence ⊣ independent-governor
  ;; StateGraph.
- :deps {io.github.com-junkawasaki/langgraph-clj
-        {:local/root "../../com-junkawasaki/langgraph-clj"}}
+ :deps {;; io.github.com-junkawasaki/langgraph-clj was renamed to kotoba-lang/langgraph
+        ;; (GitHub redirects the old coordinate) -- the old :local/root
+        ;; "../../com-junkawasaki/langgraph-clj" sibling checkout no longer
+        ;; exists in this manifest layout, so this repo could not build at
+        ;; all locally. Same git coordinate the other kotoba-lang actors use.
+        io.github.kotoba-lang/langgraph
+        {:git/url "https://github.com/kotoba-lang/langgraph.git"
+         :sha "5b4e5e70837b849b14b6a5800894e3be202ad5fa"}}
  :aliases
- {;; offline workspace dev — pin transitive langchain-clj to local checkout
+ {;; offline workspace dev — pin transitive langchain to local checkout
   :dev {:override-deps
-        {io.github.com-junkawasaki/langchain-clj {:local/root "../../com-junkawasaki/langchain-clj"}}}
+        {io.github.kotoba-lang/langchain {:local/root "../langchain"}}}
   ;; gijiroku.bot-join (headless-browser meeting join, no OAuth app needed) —
   ;; NOT a core dep, so the OAuth-API path (gijiroku.zoom/google-meet/teams)
   ;; stays lightweight for consumers that don't need bot-join.
