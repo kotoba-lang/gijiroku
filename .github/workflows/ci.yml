@@ -17,21 +17,15 @@ jobs:
       matrix:
         java: ['17', '21']
     steps:
-      # gijiroku's deps.edn :deps resolves io.github.com-junkawasaki/langgraph-clj
-      # via a :local/root sibling path (../../com-junkawasaki/langgraph-clj, the
-      # "3-actor" deps.edn convention, CLAUDE.md Actors section) rather than a git
-      # dep, so CI has to reproduce that orgs/<org>/<repo> layout instead of a
-      # single checkout.
+      # gijiroku's base :deps resolves io.github.kotoba-lang/langgraph via a
+      # plain :git/sha dependency (not :local/root), so no sibling checkout
+      # is needed here -- tools.deps fetches it over the network. The :dev
+      # (langchain) and :bot-join (playwright) aliases still expect local
+      # siblings, but neither is exercised by the :test/:lint steps below.
       - name: Checkout gijiroku
         uses: actions/checkout@v4
         with:
           path: work/orgs/kotoba-lang/gijiroku
-
-      - name: Checkout langgraph-clj sibling (kotoba-lang/langgraph)
-        uses: actions/checkout@v4
-        with:
-          repository: kotoba-lang/langgraph
-          path: work/orgs/com-junkawasaki/langgraph-clj
 
       - name: Setup JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
