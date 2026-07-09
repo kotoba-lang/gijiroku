@@ -8,7 +8,8 @@
             [langgraph.graph :as g]
             [gijiroku.store :as store]
             [gijiroku.scribellm :as scribellm]
-            [gijiroku.operation :as op]))
+            [gijiroku.operation :as op]
+            [gijiroku.governor :as gov]))
 
 (defn- fresh [] (let [s (store/seed-db)] [s (op/build s)]))
 (defn- ctx [phase] {:phase phase})
@@ -104,3 +105,20 @@
           r2 (g/run* actor {:approval {:status :rejected :by "jun"}}
                      {:thread-id "r" :resume? true})]
       (is (= :hold (get-in r2 [:state :disposition]))))))
+
+(deftest governor-check-fails-closed-on-an-unrecognized-op
+  (testing "gov/check itself (not just the wrapping phase/gate) must reject an
+            unrecognized/typo'd/not-yet-wired :op as a hard violation -- a
+            confident, otherwise-clean proposal for a bogus op must never come
+            back :ok? true, since gov/check is documented as the independent
+            censor that decides commit/hold and any future direct caller
+            (a new UI surface, a refactor, code outside operation.cljc) must
+            not be able to slip an unhandled op past every zero-trust check --
+            same invariant kekkai/denrei/koyomi/tayori/shoko/teian/ichiran's
+            governors already enforce for their own ops"
+    (let [[s _] (fresh)
+          verdict (gov/check {:op :minutes/bogus :meeting-id "m-weekly"}
+                              {:effect :minutes :confidence 0.99} s)]
+      (is (false? (:ok? verdict)))
+      (is (true? (:hard? verdict)))
+      (is (some #{:unrecognized-op} (mapv :rule (:violations verdict)))))))
