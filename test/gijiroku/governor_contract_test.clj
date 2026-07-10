@@ -83,12 +83,27 @@
 (deftest distribute-always-requires-signoff
   (testing "distribute never auto-commits, even at phase 3 with clean recipients"
     (let [[_ actor] (fresh)
+          _  (run actor "x-draft" {:op :minutes/draft :meeting-id "m-weekly"} 3)
           r1 (run actor "x" {:op :minutes/distribute :meeting-id "m-weekly"
                              :recipients ["p-jun" "p-guest"]} 3)]
       (is (= :interrupted (:status r1)))
       (let [r2 (g/run* actor {:approval {:status :approved :by "jun"}}
                        {:thread-id "x" :resume? true})]
         (is (= :commit (get-in r2 [:state :disposition])))))))
+
+(deftest distribute-without-prior-draft-is-held-and-unoverridable
+  (testing ":minutes/distribute on a meeting whose minutes were never drafted must HOLD,
+            not deliver a phantom near-empty minutes record + write a false
+            :committed ledger fact for a distribution that never meaningfully happened"
+    (let [[s actor] (fresh)
+          res (run actor "nodraft" {:op :minutes/distribute :meeting-id "m-weekly"
+                                    :recipients ["p-jun" "p-guest"]} 3)
+          ledger (store/ledger s)]
+      (is (not= :interrupted (:status res)) "hard violations hold directly, no approval offered")
+      (is (= :hold (get-in res [:state :disposition])))
+      (is (some #{:missing-minutes} (-> ledger last :basis)))
+      (is (nil? (store/minutes-of s "m-weekly")) "no phantom minutes were ever fabricated")
+      (is (not-any? #{:committed} (map :t ledger)) "no false :committed ledger fact was written"))))
 
 (deftest distribute-to-non-participant-is-held-and-unoverridable
   (testing "a recipient outside the meeting roster is a tenant-isolation violation"
@@ -101,10 +116,48 @@
 (deftest reject-signoff-holds
   (testing "a rejected distribution records a hold, not a send"
     (let [[_ actor] (fresh)
+          _  (run actor "r-draft" {:op :minutes/draft :meeting-id "m-weekly"} 3)
           _  (run actor "r" {:op :minutes/distribute :meeting-id "m-weekly" :recipients ["p-jun"]} 3)
           r2 (g/run* actor {:approval {:status :rejected :by "jun"}}
                      {:thread-id "r" :resume? true})]
       (is (= :hold (get-in r2 [:state :disposition]))))))
+
+(deftest distribute-delivers-the-governed-store-minutes-not-a-divergent-proposal
+  (testing "governor/check's :minutes/distribute redaction re-check validates
+            the STORE'S already-committed minutes (see governor.cljc), never
+            the distribute-time `proposal` -- so the delivered/distributed
+            content must come from that same checked minutes, not from a
+            divergent proposal the recheck never actually validated. A
+            careless/adversarial distribute-time scribe-LLM call (which
+            re-derives content from the raw transcript) must never
+            re-introduce an unredacted sensitive quote that :minutes/draft
+            had already correctly redacted."
+    (let [s (store/seed-db)
+          _ (store/record-datom! s {:kind :consent :id "m-perf"
+                                    :value {:meeting-id "m-perf" :recording-announced? true
+                                            :legal-basis "contract"}})
+          clean-actor (op/build s)
+          _ (run clean-actor "gov-draft" {:op :minutes/draft :meeting-id "m-perf"} 3)
+          governed-minutes (store/minutes-of s "m-perf")
+          careless (reify scribellm/Advisor
+                     (-advise [_ transcript]
+                       {:summary (apply str (map :text (:segments transcript)))
+                        :decisions [] :action-items []
+                        :cites (mapv :seg-id (:segments transcript))
+                        :redactions [] :effect :minutes :confidence 0.95}))
+          adversarial-actor (op/build s {:advisor careless})
+          r1 (run adversarial-actor "gov-dist" {:op :minutes/distribute :meeting-id "m-perf"
+                                                :recipients ["p-jun"]} 3)]
+      (is (= :interrupted (:status r1)) "still requires human sign-off")
+      (let [r2 (g/run* adversarial-actor {:approval {:status :approved :by "p-jun"}}
+                       {:thread-id "gov-dist" :resume? true})]
+        (is (= :commit (get-in r2 [:state :disposition])))
+        (is (= (:redactions governed-minutes) (:redactions (store/minutes-of s "m-perf")))
+            "distributed minutes keep the GOVERNED redaction, not the adversarial proposal's")
+        (is (= ["s2"] (:redactions (store/minutes-of s "m-perf")))
+            "the health-tagged segment stays redacted")
+        (is (= (:summary governed-minutes) (:summary (store/minutes-of s "m-perf")))
+            "the distributed summary is the governed draft's, not the careless re-derivation")))))
 
 (deftest governor-check-fails-closed-on-an-unrecognized-op
   (testing "gov/check itself (not just the wrapping phase/gate) must reject an

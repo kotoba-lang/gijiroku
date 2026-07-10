@@ -35,11 +35,26 @@
     :recording/fetch    {:kind :recording  :id meeting-id :value value}
     :transcript/ingest  {:kind :transcript :id meeting-id :value value}))
 
-(defn- minutes-record [request proposal by]
-  {:kind :minutes :id (:meeting-id request)
-   :value {:summary (:summary proposal) :decisions (:decisions proposal)
-           :action-items (:action-items proposal) :cites (:cites proposal)
-           :redactions (:redactions proposal) :by by}})
+(defn- minutes-record
+  "The store record a clean/approved assess op commits. `:minutes/draft`
+  builds it from `proposal` (the scribe-LLM's fresh output for this meeting).
+  `:minutes/distribute` builds it from `verdict`'s `:checked-content` — the
+  store's already-committed, already-redaction-checked minutes that
+  gijiroku.governor/check validated at govern-time for THIS request — NEVER
+  from `proposal`: a distribute-time proposal is re-derived from the raw
+  transcript by a fresh scribe-LLM call that governor/check's redaction
+  re-check deliberately distrusts (see governor.cljc), so building the
+  distributed record from `proposal` instead would validate one map and
+  commit/distribute a different, unvalidated one."
+  [request proposal verdict by]
+  (case (:op request)
+    :minutes/distribute
+    {:kind :minutes :id (:meeting-id request)
+     :value (assoc (:checked-content verdict) :by by)}
+    {:kind :minutes :id (:meeting-id request)
+     :value {:summary (:summary proposal) :decisions (:decisions proposal)
+             :action-items (:action-items proposal) :cites (:cites proposal)
+             :redactions (:redactions proposal) :by by}}))
 
 (defn- commit-effects!
   "Op-specific side effect on commit. Only `:minutes/distribute` actuates
@@ -109,13 +124,13 @@
                         :summary (:summary proposal)
                         :phase ph :confidence (:confidence verdict)}]}
               :commit
-              {:disposition :commit :record (minutes-record request proposal :auto)}))))
+              {:disposition :commit :record (minutes-record request proposal verdict :auto)}))))
 
       (g/add-node :request-approval
         (fn [{:keys [request proposal approval verdict]}]
           (if (= :approved (:status approval))
             {:disposition :commit
-             :record (minutes-record request proposal (:by approval))
+             :record (minutes-record request proposal verdict (:by approval))
              :audit [{:t :human-signoff :op (:op request) :meeting-id (:meeting-id request)
                       :by (:by approval) :summary (:summary proposal)}]}
             {:disposition :hold
