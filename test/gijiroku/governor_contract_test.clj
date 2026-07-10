@@ -43,6 +43,23 @@
       (is (some #{:no-consent} basis))
       (is (nil? (store/minutes-of s "m-perf")) "never drafted without consent"))))
 
+(deftest draft-with-a-declined-participant-is-held
+  (testing ":participant-consents was captured in the data model and seed
+            fixtures but never actually read by consent-clean? -- a
+            participant who explicitly declined ({id false}) used to be
+            treated identically to one who consented, as long as the
+            meeting-level :recording-announced?/:legal-basis fields were
+            on file"
+    (let [[s actor] (fresh)
+          _ (store/record-datom! s {:kind :consent :id "m-perf"
+                                    :value {:meeting-id "m-perf" :recording-announced? true
+                                            :legal-basis "contract"
+                                            :participant-consents {"p-jun" true "p-emp" false}}})
+          res (run actor "d-decline" {:op :minutes/draft :meeting-id "m-perf"} 3)]
+      (is (= :hold (get-in res [:state :disposition])))
+      (is (some #{:no-consent} (-> (store/ledger s) last :basis)))
+      (is (nil? (store/minutes-of s "m-perf")) "never drafted when a participant declined"))))
+
 (deftest unredacted-sensitive-cite-is-held
   (testing "a careless advisor cites the health-tagged segment without redacting it"
     (let [[s _] (fresh)

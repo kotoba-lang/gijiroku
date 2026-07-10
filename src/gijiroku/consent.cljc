@@ -5,14 +5,23 @@
   rules without coupling the censor to the proposer.
 
   A meeting's recording is consent-clean only when a `:consent/record` ground
-  fact exists, recording was announced, and a legal basis is on file — silence
-  (no consent record at all) is NOT treated as consent."
+  fact exists, recording was announced, a legal basis is on file, AND no
+  participant explicitly declined — silence (no consent record at all, or a
+  participant simply absent from `:participant-consents`) is NOT treated as
+  consent, but neither is an explicit decline overridable by the meeting-level
+  fields: `:participant-consents` was captured in the data model and seed
+  fixtures from the start but never actually READ here, so a participant who
+  explicitly declined (`{id false}`) was silently treated identically to one
+  who consented."
   (:require [gijiroku.model :as m]))
 
 (defn consent-clean?
   "Is `consent` sufficient to allow committing minutes for this meeting?"
   [consent]
-  (boolean (and consent (:recording-announced? consent) (seq (:legal-basis consent)))))
+  (boolean (and consent
+                (:recording-announced? consent)
+                (seq (:legal-basis consent))
+                (not-any? false? (vals (:participant-consents consent))))))
 
 (defn tenant-recipients
   "Filter `recipient-ids` down to those that are participants of `meeting`
