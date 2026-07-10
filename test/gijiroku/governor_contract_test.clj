@@ -34,6 +34,21 @@
       (is (= :commit (get-in res [:state :disposition])))
       (is (some? (:summary (store/minutes-of s "m-weekly")))))))
 
+(deftest missing-phase-context-does-not-grant-max-autonomy
+  ;; default-phase is the fallback both when :phase is entirely absent
+  ;; from context (gijiroku.operation) and when an unrecognized phase
+  ;; number is passed (phase/gate). It used to be 3 -- where
+  ;; :minutes/draft can auto-commit -- so a caller that simply forgot
+  ;; to set :phase silently got MAXIMUM autonomy instead of the safe
+  ;; "start narrow" default.
+  (testing "omitting :phase from context still requires human approval on a clean draft"
+    (let [[s actor] (fresh)
+          res (g/run* actor {:request {:op :minutes/draft :meeting-id "m-weekly"} :context {}}
+                      {:thread-id "mp"})]
+      (is (not= :commit (get-in res [:state :disposition]))
+          "a clean draft must not auto-commit when :phase is unset")
+      (is (nil? (store/minutes-of s "m-weekly")) "SSoT untouched without explicit phase"))))
+
 (deftest draft-without-consent-is-held-and-unoverridable
   (testing "m-perf has no :consent/record ground fact yet"
     (let [[s actor] (fresh)
