@@ -7,7 +7,7 @@
   gijiroku; jvm-http-fn is provided for convenience. Verbose_json has no
   speaker field — segments come back with :speaker nil (see
   gijiroku.transcriber docstring)."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [gijiroku.transcriber :as t])
   (:import [java.net URI]
            [java.net.http HttpClient HttpRequest HttpRequest$BodyPublishers
@@ -20,7 +20,7 @@
   [{:keys [url method headers body-bytes]}]
   (let [b (HttpRequest/newBuilder (URI/create url))]
     (doseq [[k v] headers] (.header b k v))
-    (let [req (-> b (.method (str/upper-case (name (or method :post)))
+    (let [req (-> b (.method (str/upper (name (or method :post)))
                             (HttpRequest$BodyPublishers/ofByteArray body-bytes))
                   (.build))
           resp (.send (HttpClient/newHttpClient) req (HttpResponse$BodyHandlers/ofString))]

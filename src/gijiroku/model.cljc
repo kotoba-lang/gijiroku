@@ -22,14 +22,14 @@
 
   :tenant is the consuming org (\"cloud-itonami\" \"cloud-manimani\" ...) —
   the PrivacyGovernor's tenant-isolation invariant keys off it."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (defn external-domain?
   "Is `email`'s domain outside `tenant-domain`? Used to flag guest
   participants for the PrivacyGovernor's high-stakes distribute gate."
   [tenant-domain email]
-  (let [domain (some-> email (str/split #"@") second str/lower-case)]
-    (boolean (and domain tenant-domain (not= domain (str/lower-case tenant-domain))))))
+  (let [domain (some-> email (str/split #"@") second str/lower)]
+    (boolean (and domain tenant-domain (not= domain (str/lower tenant-domain))))))
 
 (defn participant-ids [meeting] (mapv :id (:participants meeting)))
 

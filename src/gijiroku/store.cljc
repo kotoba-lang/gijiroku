@@ -19,7 +19,7 @@
   store or git (see CLAUDE.md 大容量バイナリ節)."
   (:require #?(:clj  [clojure.edn :as edn]
                :cljs [cljs.reader :as edn])
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [langchain.db :as d]))
 
 (defprotocol Store

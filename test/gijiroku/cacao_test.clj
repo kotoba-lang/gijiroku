@@ -4,7 +4,7 @@
   checkable: canonical did:key, a verifying Ed25519 signature over the exact
   SIWE message, and a well-formed CBOR envelope."
   (:require [clojure.test :refer [deftest is testing]]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [gijiroku.cacao :as c])
   (:import [java.util Base64]
            [java.security Signature]))
