@@ -4,7 +4,12 @@
  ;; robotaxi-actor / vehicle-design-actor / itonami / kekkai ride on; a meeting-
  ;; recording actor is just another sealed-intelligence ⊣ independent-governor
  ;; StateGraph.
- :deps {;; io.github.com-junkawasaki/langgraph-clj was renamed to kotoba-lang/langgraph
+ :deps {
+        ;; kotoba.lang.text, not clojure.string. Pinned as an explicit floor:
+        ;; tools.deps takes the NEWEST sha it is shown, so without a floor here
+        ;; this repo silently rides whatever a sibling happens to name.
+        io.github.kotoba-lang/text {:git/sha "73bdb13ae7a3d004b44bca08be03a3191157a38f"}
+       ;; io.github.com-junkawasaki/langgraph-clj was renamed to kotoba-lang/langgraph
         ;; (GitHub redirects the old coordinate) -- the old :local/root
         ;; "../../com-junkawasaki/langgraph-clj" sibling checkout no longer
         ;; exists in this manifest layout, so this repo could not build at

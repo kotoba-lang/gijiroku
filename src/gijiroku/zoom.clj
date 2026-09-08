@@ -19,7 +19,7 @@
                                                                   cloud recording)
   Webhook: `recording.completed` payload, signature header `x-zm-signature`
   = \"v0=\" + hex(HMAC-SHA256(secret-token, \"v0:{x-zm-request-timestamp}:{raw-body}\"))."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [gijiroku.platform :as p])
   (:import [java.net URI]
            [java.net.http HttpClient HttpRequest HttpRequest$BodyPublishers
@@ -34,7 +34,7 @@
   [{:keys [url method headers body]}]
   (let [b (HttpRequest/newBuilder (URI/create url))]
     (doseq [[k v] headers] (.header b k v))
-    (let [req  (-> b (.method (str/upper-case (name (or method :get)))
+    (let [req  (-> b (.method (str/upper (name (or method :get)))
                              (if body
                                (HttpRequest$BodyPublishers/ofString body)
                                (HttpRequest$BodyPublishers/noBody)))

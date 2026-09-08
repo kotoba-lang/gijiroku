@@ -4,7 +4,7 @@
   itself needs a real API key and is not exercised here (see gijiroku.whisper
   namespace docstring)."
   (:require [clojure.test :refer [deftest is]]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [gijiroku.whisper :as w]
             [gijiroku.transcriber :as t])
   (:import [java.nio.file Files]))
