@@ -176,10 +176,10 @@ hold/escalate** する（LLM の幻覚や取りこぼしが「配布」に直結
 
 ## Status
 
-設計実装まで完了。runnable（`clojure -M:dev:run`）+ 契約テスト（`clojure
+設計実装まで完了。runnable（`kbb -M:dev:run`）+ 契約テスト（`clojure
 -M:dev:test:bot-join` — privacy contract · store parity · platform
 mock/VTT/HMAC · bot-join join-URL/selectors · Whisper multipart · CACAO
-offline、**30 tests / 92 assertions**）、lint clean（`clojure -M:bot-join:lint`）。
+offline、**30 tests / 92 assertions**）、lint clean（`kbb -M:bot-join:lint`）。
 
 Zoom/Google Meet/Teams の実クライアントは正しい API 形状で実装済みだが、各社の
 OAuth app 登録・admin consent が前提のため **live 結合は未検証**（kekkai の

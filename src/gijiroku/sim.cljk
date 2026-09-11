@@ -10,7 +10,7 @@
     distribute m-weekly → a non-participant recipient → HARD HOLD (tenant-isolation)
     phase 0          draft in observe-only phase → held (phase-disabled)
 
-  Run: clojure -M:dev:run"
+  Run: kbb -M:dev:run"
   (:require [langgraph.graph :as g]
             [gijiroku.store :as store]
             [gijiroku.scribellm :as scribellm]

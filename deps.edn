@@ -25,7 +25,7 @@
   ;; NOT a core dep, so the OAuth-API path (gijiroku.zoom/google-meet/teams)
   ;; stays lightweight for consumers that don't need bot-join.
   :bot-join {:extra-deps {io.github.kotoba-lang/playwright {:local/root "../playwright"}}}
-  ;; clojure -M:dev:run  → drive a scribe actor through mock meetings
+  ;; kbb -M:dev:run  → drive a scribe actor through mock meetings
   :run {:main-opts ["-m" "gijiroku.sim"]}
   :test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner

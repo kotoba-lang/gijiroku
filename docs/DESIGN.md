@@ -85,13 +85,13 @@ OAuth app 登録・admin consent が一切不要な代わりに、Xvfb+PulseAudi
 不変条件は同一**（bot-join は `:recording/fetch`/`:transcript/ingest` の別ソース
 というだけ）。
 
-## 6. デモ（`clojure -M:dev:run`）
+## 6. デモ（`kbb -M:dev:run`）
 
 `src/gijiroku/sim.cljk` が代表シナリオを actor に通す（ingest → 同意有りの
 自動下書き → 同意無しの HARD HOLD → 機微引用の HARD HOLD → 常に人間承認の
 配布 → テナント越境配布の HARD HOLD → phase 0 の抑制）。最後に監査台帳を表示。
 
-## 7. テスト（`clojure -M:dev:test:bot-join`）
+## 7. テスト（`kbb -M:dev:test:bot-join`）
 
 `test/gijiroku/governor_contract_test.cljk` がプライバシー契約を実行可能にする
 （consent-required／redaction／tenant-isolation／no-actuation の各 HARD 不変条件、
