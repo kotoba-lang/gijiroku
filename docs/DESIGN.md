@@ -87,13 +87,13 @@ OAuth app 登録・admin consent が一切不要な代わりに、Xvfb+PulseAudi
 
 ## 6. デモ（`clojure -M:dev:run`）
 
-`src/gijiroku/sim.cljc` が代表シナリオを actor に通す（ingest → 同意有りの
+`src/gijiroku/sim.cljk` が代表シナリオを actor に通す（ingest → 同意有りの
 自動下書き → 同意無しの HARD HOLD → 機微引用の HARD HOLD → 常に人間承認の
 配布 → テナント越境配布の HARD HOLD → phase 0 の抑制）。最後に監査台帳を表示。
 
 ## 7. テスト（`clojure -M:dev:test:bot-join`）
 
-`test/gijiroku/governor_contract_test.clj` がプライバシー契約を実行可能にする
+`test/gijiroku/governor_contract_test.cljk` がプライバシー契約を実行可能にする
 （consent-required／redaction／tenant-isolation／no-actuation の各 HARD 不変条件、
 distribute は常に人間承認、phase 0 の抑制）。`store_contract_test.clj` が
 MemStore ≡ DatomicStore を、`platform_test.clj` が mock 契約 + VTT パーサ +

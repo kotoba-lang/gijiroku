@@ -62,8 +62,8 @@ Playwright を強制しない）を追加し、`MeetingPlatform` の第二実装
   `operation.cljc`/`governor.cljc` を一切変更せず追加できた。
 - (−) live 未検証（実会議・Xvfb/PulseAudio/ffmpeg ホストが本環境に無い）。
   オフライン検証済みなのは join-url 構築・host-caps 注入契約・
-  Whisper multipart body 形状のみ（`test/gijiroku/bot_join_test.clj`
-  `test/gijiroku/whisper_test.clj`）。
+  Whisper multipart body 形状のみ（`test/gijiroku/bot_join_test.cljk`
+  `test/gijiroku/whisper_test.cljk`）。
 - (−) join-flow セレクタは各社 web client の DOM に依存する UI ヒューリス
   ティックで、UI 変更で壊れる（namespace docstring に明記）。
 - (−) 話者分離が無い（Whisper 経由の STT は speaker を返さない）。
@@ -73,5 +73,5 @@ Playwright を強制しない）を追加し、`MeetingPlatform` の第二実装
 ## References
 
 - `orgs/kotoba-lang/playwright`（Playwright for Java の Clojure ラッパー）
-- `src/gijiroku/bot_join.clj` / `src/gijiroku/transcriber.cljc` / `src/gijiroku/whisper.clj`
+- `src/gijiroku/bot_join.cljk` / `src/gijiroku/transcriber.cljk` / `src/gijiroku/whisper.cljk`
 - superproject ADR-2607031100 の「録音取得方式の検討」節
