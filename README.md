@@ -52,23 +52,23 @@ meeting facts (meeting/consent/recording/transcript)
 
 | | |
 |---|---|
-| `src/gijiroku/model.cljc` | canonical data model — meeting/consent/recording/transcript/minutes |
-| `src/gijiroku/platform.cljc` | `MeetingPlatform` port + `mock-platform` (default) |
-| `src/gijiroku/zoom.clj` | Zoom Cloud Recording API client (S2S OAuth) + webhook HMAC verify |
-| `src/gijiroku/google_meet.clj` | Google Workspace Meet REST API v2 client |
-| `src/gijiroku/teams.clj` | Microsoft Graph (onlineMeetings recordings/transcripts) client |
-| `src/gijiroku/consent.cljc` | pure consent/tenant/redaction evaluation (no I/O) |
-| `src/gijiroku/scribellm.cljc` | scribe-LLM — sealed intelligence, proposal only |
-| `src/gijiroku/governor.cljc` | **PrivacyGovernor** — independent censor over proposals |
-| `src/gijiroku/phase.cljc` | **Phase 0→3** — observe-only → assisted → supervised (distribute always human) |
-| `src/gijiroku/store.cljc` | `Store` protocol — `MemStore` ‖ `DatomicStore` |
-| `src/gijiroku/operation.cljc` | **MeetingRecordActor** — langgraph-clj StateGraph; ingest vs assess flows |
-| `src/gijiroku/cacao.clj` | agent-side **CACAO self-mint** (JVM Ed25519 + did:key + CBOR) |
-| `src/gijiroku/kotoba.clj` | wire `DatomicStore` to a kotoba-server pod (kotobase.net XRPC) |
-| `src/gijiroku/bot_join.clj` | **bot-join `MeetingPlatform`** — headless-browser join, no OAuth app needed (`:bot-join` alias) |
-| `src/gijiroku/transcriber.cljc` | `Transcriber` port + `mock-transcriber` (bot-join has no native transcript) |
-| `src/gijiroku/whisper.clj` | Whisper-compatible STT client for bot-join audio |
-| `src/gijiroku/sim.cljc` | demo driver |
+| `src/gijiroku/model.cljk` | canonical data model — meeting/consent/recording/transcript/minutes |
+| `src/gijiroku/platform.cljk` | `MeetingPlatform` port + `mock-platform` (default) |
+| `src/gijiroku/zoom.cljk` | Zoom Cloud Recording API client (S2S OAuth) + webhook HMAC verify |
+| `src/gijiroku/google_meet.cljk` | Google Workspace Meet REST API v2 client |
+| `src/gijiroku/teams.cljk` | Microsoft Graph (onlineMeetings recordings/transcripts) client |
+| `src/gijiroku/consent.cljk` | pure consent/tenant/redaction evaluation (no I/O) |
+| `src/gijiroku/scribellm.cljk` | scribe-LLM — sealed intelligence, proposal only |
+| `src/gijiroku/governor.cljk` | **PrivacyGovernor** — independent censor over proposals |
+| `src/gijiroku/phase.cljk` | **Phase 0→3** — observe-only → assisted → supervised (distribute always human) |
+| `src/gijiroku/store.cljk` | `Store` protocol — `MemStore` ‖ `DatomicStore` |
+| `src/gijiroku/operation.cljk` | **MeetingRecordActor** — langgraph-clj StateGraph; ingest vs assess flows |
+| `src/gijiroku/cacao.cljk` | agent-side **CACAO self-mint** (JVM Ed25519 + did:key + CBOR) |
+| `src/gijiroku/kotoba.cljk` | wire `DatomicStore` to a kotoba-server pod (kotobase.net XRPC) |
+| `src/gijiroku/bot_join.cljk` | **bot-join `MeetingPlatform`** — headless-browser join, no OAuth app needed (`:bot-join` alias) |
+| `src/gijiroku/transcriber.cljk` | `Transcriber` port + `mock-transcriber` (bot-join has no native transcript) |
+| `src/gijiroku/whisper.cljk` | Whisper-compatible STT client for bot-join audio |
+| `src/gijiroku/sim.cljk` | demo driver |
 | `test/gijiroku/*_test.clj` | privacy contract · store parity (Mem≡Datomic) · platform (mock + VTT/HMAC) · bot-join (join-URL/selectors) · Whisper (multipart) · CACAO |
 
 ## Recording acquisition: two Platform implementations

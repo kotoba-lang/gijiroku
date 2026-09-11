@@ -33,7 +33,7 @@
   proven offline, live pending a real rig' status as gijiroku.zoom/teams and
   kekkai's kotobase.net wiring. What IS verified offline: join-URL
   construction per platform and the host-caps injection contract
-  (test/gijiroku/bot_join_test.clj)."
+  (test/gijiroku/bot_join_test.cljk)."
   (:require [gijiroku.model :as m]
             [gijiroku.platform :as p]
             [gijiroku.transcriber :as t]))
