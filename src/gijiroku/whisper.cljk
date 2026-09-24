@@ -7,12 +7,12 @@
   gijiroku; jvm-http-fn is provided for convenience. Verbose_json has no
   speaker field — segments come back with :speaker nil (see
   gijiroku.transcriber docstring)."
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.bytes :as kbytes] [kotoba.io :as kio] [kotoba.lang.text :as str]
             [gijiroku.transcriber :as t])
   (:import [java.net URI]
            [java.net.http HttpClient HttpRequest HttpRequest$BodyPublishers
             HttpResponse$BodyHandlers]
-           [java.nio.file Files Paths]
+           [java.nio.file Paths]
            [java.util UUID]))
 
 (defn jvm-http-fn
@@ -45,10 +45,10 @@
   ({name value}) plus one file field reading `audio-path`."
   ^bytes [bnd fields audio-path]
   (let [out (java.io.ByteArrayOutputStream.)
-        write! (fn [^String s] (.write out (.getBytes s "UTF-8")))]
+        write! (fn [^String s] (.write out (kbytes/utf8-bytes s)))]
     (doseq [[k v] fields] (write! (field-part bnd (name k) (str v))))
     (write! (file-part-header bnd "file" (.getFileName (Paths/get audio-path (into-array String []))) "audio/wav"))
-    (.write out ^bytes (Files/readAllBytes (Paths/get audio-path (into-array String []))))
+    (.write out ^bytes (kio/read-all-bytes audio-path))
     (write! "\r\n")
     (write! (str "--" bnd "--\r\n"))
     (.toByteArray out)))

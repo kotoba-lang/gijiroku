@@ -19,12 +19,11 @@
                                                                   cloud recording)
   Webhook: `recording.completed` payload, signature header `x-zm-signature`
   = \"v0=\" + hex(HMAC-SHA256(secret-token, \"v0:{x-zm-request-timestamp}:{raw-body}\"))."
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.bytes :as kbytes] [kotoba.lang.text :as str]
             [gijiroku.platform :as p])
   (:import [java.net URI]
            [java.net.http HttpClient HttpRequest HttpRequest$BodyPublishers
             HttpResponse$BodyHandlers]
-           [java.util Base64]
            [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]))
 
@@ -43,8 +42,8 @@
       {:status (.statusCode resp) :body (.body resp)})))
 
 (defn- basic-auth [client-id client-secret]
-  (str "Basic " (.encodeToString (Base64/getEncoder)
-                                  (.getBytes (str client-id ":" client-secret) "UTF-8"))))
+  (str "Basic " (kbytes/base64-encode
+                                  (kbytes/utf8-bytes (str client-id ":" client-secret)))))
 
 (defn fetch-token
   "S2S OAuth access token (grant_type=account_credentials)."
@@ -109,8 +108,8 @@
 
 (defn- hmac-sha256-hex [secret ^String msg]
   (let [mac (Mac/getInstance "HmacSHA256")]
-    (.init mac (SecretKeySpec. (.getBytes ^String secret "UTF-8") "HmacSHA256"))
-    (apply str (map #(format "%02x" %) (.doFinal mac (.getBytes msg "UTF-8"))))))
+    (.init mac (SecretKeySpec. (kbytes/utf8-bytes ^String secret) "HmacSHA256"))
+    (apply str (map #(format "%02x" %) (.doFinal mac (kbytes/utf8-bytes msg))))))
 
 (defn signature-valid?
   "Verify `x-zm-signature` against secret-token + timestamp + raw body."
