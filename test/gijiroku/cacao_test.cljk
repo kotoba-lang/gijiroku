@@ -3,7 +3,7 @@
   Server acceptance can't be tested here, but the crypto + encoding are fully
   checkable: canonical did:key, a verifying Ed25519 signature over the exact
   SIWE message, and a well-formed CBOR envelope."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.lang.text :as str]
             [gijiroku.cacao :as c])
   (:import [java.util Base64]

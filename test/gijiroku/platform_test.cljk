@@ -4,7 +4,7 @@
   webhook HMAC signature verification. The OAuth/HTTP paths themselves need a
   registered app + admin consent and are not live-tested here (see
   gijiroku.zoom docstring)."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [gijiroku.platform :as p]
             [gijiroku.zoom :as zoom])
   (:import [javax.crypto Mac]
