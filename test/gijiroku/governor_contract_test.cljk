@@ -4,7 +4,7 @@
   never commits minutes the PrivacyGovernor would reject, never auto-
   distributes, never actuates beyond a data record, and always records
   observations."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [langgraph.graph :as g]
             [gijiroku.store :as store]
             [gijiroku.scribellm :as scribellm]

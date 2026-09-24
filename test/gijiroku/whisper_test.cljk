@@ -3,7 +3,7 @@
   normalization and the multipart/form-data body shape. The HTTP round trip
   itself needs a real API key and is not exercised here (see gijiroku.whisper
   namespace docstring)."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [kotoba.lang.text :as str]
             [gijiroku.whisper :as w]
             [gijiroku.transcriber :as t])

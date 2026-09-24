@@ -5,7 +5,7 @@
   contract. Actually driving a browser through a live join + audio capture
   needs a real meeting + Xvfb/PulseAudio/ffmpeg host and is NOT exercised
   here (see gijiroku.bot-join namespace docstring)."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [gijiroku.bot-join :as bj]
             [gijiroku.platform :as p]))
 
