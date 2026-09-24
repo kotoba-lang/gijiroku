@@ -4,7 +4,7 @@
   webhook HMAC signature verification. The OAuth/HTTP paths themselves need a
   registered app + admin consent and are not live-tested here (see
   gijiroku.zoom docstring)."
-  (:require [kotoba.test :refer [deftest is]]
+  (:require [kotoba.bytes :as kbytes] [kotoba.test :refer [deftest is]]
             [gijiroku.platform :as p]
             [gijiroku.zoom :as zoom])
   (:import [javax.crypto Mac]
@@ -37,8 +37,8 @@
 
 (defn- hmac-sha256-hex [secret ^String msg]
   (let [mac (Mac/getInstance "HmacSHA256")]
-    (.init mac (SecretKeySpec. (.getBytes ^String secret "UTF-8") "HmacSHA256"))
-    (apply str (map #(format "%02x" %) (.doFinal mac (.getBytes msg "UTF-8"))))))
+    (.init mac (SecretKeySpec. (kbytes/utf8-bytes ^String secret) "HmacSHA256"))
+    (apply str (map #(format "%02x" %) (.doFinal mac (kbytes/utf8-bytes msg))))))
 
 (deftest webhook-signature-matches-zoom-scheme
   (let [secret "s3cr3t" ts "1751500000" body "{\"event\":\"recording.completed\"}"
