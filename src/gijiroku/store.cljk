@@ -16,7 +16,7 @@
   consented, what was drafted, who approved distribution, to whom. There is
   intentionally no raw-audio/video namespace here — that lives in object
   storage (B2 etc.) referenced by `:asset-ref`, never duplicated into the
-  store or git (see CLAUDE.md 大容量バイナリ節)."
+  store or git (see AGENTS.md 大容量バイナリ節)."
   (:require #?(:clj  [kotoba.lang.edn :as edn]
                :cljs [cljs.reader :as edn])
             [kotoba.lang.text :as str]
